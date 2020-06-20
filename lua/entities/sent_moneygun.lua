@@ -8,6 +8,7 @@ ENT.AlreadyHit = {}
 ENT.Collided = 0
 
 local CollisionsBeforeRemove = 20
+local MinSpeed = 70
 
 if SERVER then
     AddCSLuaFile()
@@ -23,20 +24,20 @@ if SERVER then
 			phys:Wake()
 			phys:SetMass(5)
         end
-        
-		self:GetPhysicsObject():SetMass(2)	
+
+		self:GetPhysicsObject():SetMass(2)
 		self.Entity:SetUseType(SIMPLE_USE)
     end
-    
+
     function ENT:PhysicsCollide(data, phys)
         self.Collided = self.Collided + 1
         if self.Collided <= CollisionsBeforeRemove then
             local Ent = data.HitEntity
-            if !Ent:IsValid() or !Ent:IsPlayer() then 
+            if !IsValid(self.Entity) or !IsValid(Ent) or !Ent:IsPlayer() then
                 return
             end
-    
-            if !self.AlreadyHit[Ent:GetName()] then
+
+            if !self.AlreadyHit[Ent:GetName()] and self.Entity:GetVelocity():LengthSqr() > MinSpeed * MinSpeed then
                 local dmg = DamageInfo()
                 if IsValid(self.Owner) then
                     dmg:SetAttacker(self.Owner)
@@ -49,19 +50,19 @@ if SERVER then
                 dmg:SetDamage(dm > 0 and dm or 0)
                 dmg:SetDamageType(DMG_GENERIC)
                 Ent:TakeDamageInfo(dmg)
-    
+
                 local effectdata = EffectData()
                 effectdata:SetStart(data.HitPos)
                 effectdata:SetOrigin(data.HitPos)
                 effectdata:SetScale(1)
                 util.Effect("BloodImpact", effectdata)
-    
+
                 self.AlreadyHit[Ent:GetName()] = true
             end
         else
-            timer.Simple(0, function() 
+            timer.Simple(0, function()
                 if IsValid(self) then
-                    self:Remove() 
+                    self:Remove()
                 end
             end)
         end
