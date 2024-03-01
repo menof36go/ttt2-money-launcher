@@ -51,7 +51,7 @@ function SWEP:Initialize()
 end
 
 function SWEP:PrimaryAttack()
-	self.Weapon:SetNextPrimaryFire(CurTime() + 1 / self.Primary.RPS)
+	self:SetNextPrimaryFire(CurTime() + 1 / self.Primary.RPS)
 
 	if not self:CanPrimaryAttack() then
 		return 
@@ -88,7 +88,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
-   self.Weapon:SetNextSecondaryFire(CurTime() + 0.5)
+   self:SetNextSecondaryFire(CurTime() + 0.5)
    
    self:EmitSound(SecondSound)
 end
