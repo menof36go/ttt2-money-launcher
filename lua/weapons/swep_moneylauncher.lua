@@ -51,7 +51,7 @@ function SWEP:Initialize()
 end
 
 function SWEP:PrimaryAttack()
-	self.Weapon:SetNextPrimaryFire(CurTime() + 1 / self.Primary.RPS)
+	self:SetNextPrimaryFire(CurTime() + 1 / self.Primary.RPS)
 
 	if not self:CanPrimaryAttack() then
 		return 
@@ -69,11 +69,11 @@ function SWEP:PrimaryAttack()
 		return 
 	end
 	ent:SetModel("models/props/cs_assault/Money.mdl")
-	ent:SetAngles(self.Owner:EyeAngles())
-	ent:SetPos(self.Owner:EyePos() + (self.Owner:GetAimVector() * 16))
-	ent:SetOwner(self.Owner) -- Prevents all normal phys damage to all entities for whatever reason, but we actually want this to be the case
+	ent:SetAngles(self:GetOwner():EyeAngles())
+	ent:SetPos(self:GetOwner():EyePos() + (self:GetOwner():GetAimVector() * 16))
+	ent:SetOwner(self:GetOwner()) -- Prevents all normal phys damage to all entities for whatever reason, but we actually want this to be the case
 	ent:Spawn()
-	ent.Owner = self.Owner
+	ent.Owner = self:GetOwner()
 	ent:Activate()
  	util.SpriteTrail(ent, 0, Color(255,215,0), false, 16, 1, 6, 1/(15+1)*0.5, "trails/laser.vmt")
 	local phys = ent:GetPhysicsObject()
@@ -82,13 +82,13 @@ function SWEP:PrimaryAttack()
 		return 
 	end
 	phys:SetMass(2)
-	phys:SetVelocity(self.Owner:GetAimVector() * 100000)
+	phys:SetVelocity(self:GetOwner():GetAimVector() * 100000)
 	local anglo = Angle(-10, -5, 0)		
-	self.Owner:ViewPunch(anglo)
+	self:GetOwner():ViewPunch(anglo)
 end
 
 function SWEP:SecondaryAttack()
-   self.Weapon:SetNextSecondaryFire(CurTime() + 0.5)
+   self:SetNextSecondaryFire(CurTime() + 0.5)
    
    self:EmitSound(SecondSound)
 end
