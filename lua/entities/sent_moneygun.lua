@@ -16,9 +16,9 @@ if SERVER then
     function ENT:Initialize()
 		self:SetModel("models/props/cs_assault/Money.mdl")
 		self:PhysicsInit(SOLID_VPHYSICS)
-		self.Entity:SetMoveType(MOVETYPE_VPHYSICS)
-		self.Entity:SetSolid(SOLID_VPHYSICS)
-		local phys = self.Entity:GetPhysicsObject()
+		self:SetMoveType(MOVETYPE_VPHYSICS)
+		self:SetSolid(SOLID_VPHYSICS)
+		local phys = self:GetPhysicsObject()
 
 		if (phys:IsValid()) then
 			phys:Wake()
@@ -26,18 +26,18 @@ if SERVER then
         end
 
 		self:GetPhysicsObject():SetMass(2)
-		self.Entity:SetUseType(SIMPLE_USE)
+		self:SetUseType(SIMPLE_USE)
     end
 
     function ENT:PhysicsCollide(data, phys)
         self.Collided = self.Collided + 1
         if self.Collided <= CollisionsBeforeRemove then
             local Ent = data.HitEntity
-            if !IsValid(self.Entity) or !IsValid(Ent) or !Ent:IsPlayer() then
+            if !IsValid(self) or !IsValid(Ent) or !Ent:IsPlayer() then
                 return
             end
 
-            if !self.AlreadyHit[Ent:GetName()] and self.Entity:GetVelocity():LengthSqr() > MinSpeed * MinSpeed then
+            if !self.AlreadyHit[Ent:GetName()] and self:GetVelocity():LengthSqr() > MinSpeed * MinSpeed then
                 local dmg = DamageInfo()
                 if IsValid(self.Owner) then
                     dmg:SetAttacker(self.Owner)
@@ -71,6 +71,6 @@ end
 
 if CLIENT then
 	function ENT:Draw()
-		self.Entity:DrawModel()
+		self:DrawModel()
 	end
 end
