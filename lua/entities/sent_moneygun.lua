@@ -4,11 +4,6 @@ ENT.Author = ""
 ENT.Contact = ""
 ENT.Purpose	= ""
 ENT.Instructions = ""
-ENT.AlreadyHit = {}
-ENT.Collided = 0
-
-local CollisionsBeforeRemove = 20
-local MinSpeed = 70
 
 if SERVER then
     AddCSLuaFile()
@@ -18,6 +13,7 @@ if SERVER then
 		self:PhysicsInit(SOLID_VPHYSICS)
 		self:SetMoveType(MOVETYPE_VPHYSICS)
 		self:SetSolid(SOLID_VPHYSICS)
+        self.Armed = true
 		local phys = self:GetPhysicsObject()
 
 		if (phys:IsValid()) then
@@ -29,44 +25,46 @@ if SERVER then
 		self:SetUseType(SIMPLE_USE)
     end
 
+    function ENT:Think()
+        self.lifetime = self.lifetime or CurTime() + 10
+        if CurTime() > self.lifetime then self:Remove() end
+    end
+
+    function ENT:Disable()
+        self.PhysicsCollide = function() end
+        self.lifetime = CurTime() + 15
+    end
+
     function ENT:PhysicsCollide(data, phys)
-        self.Collided = self.Collided + 1
-        if self.Collided <= CollisionsBeforeRemove then
-            local Ent = data.HitEntity
-            if !IsValid(self) or !IsValid(Ent) or !Ent:IsPlayer() then
-                return
-            end
-
-            if !self.AlreadyHit[Ent:GetName()] and self:GetVelocity():LengthSqr() > MinSpeed * MinSpeed then
-                local dmg = DamageInfo()
-                if IsValid(self:GetOwner()) then
-                    dmg:SetAttacker(self:GetOwner())
-                end
-                local inflictor = ents.Create("swep_moneylauncher")
-                dmg:SetInflictor(inflictor)
-                local r = GetConVar("ttt_moneylauncher_randomDamage"):GetFloat()
-                local rand = math.random(-r, r)
-                local dm = GetConVar("ttt_moneylauncher_damage"):GetInt() + rand
-                dmg:SetDamage(dm > 0 and dm or 0)
-                dmg:SetDamageType(DMG_GENERIC)
-                Ent:TakeDamageInfo(dmg)
-
-                local effectdata = EffectData()
-                effectdata:SetStart(data.HitPos)
-                effectdata:SetOrigin(data.HitPos)
-                effectdata:SetScale(1)
-                util.Effect("BloodImpact", effectdata)
-
-                self.AlreadyHit[Ent:GetName()] = true
-            end
-        else
-            timer.Simple(0, function()
-                if IsValid(self) then
-                    self:Remove()
-                end
-            end)
+        local hitEnt = data.HitEntity
+        if not IsValid(self) or self.HasHit or not self.Armed then return end
+        if not IsValid(hitEnt) or not hitEnt:IsPlayer() or not hitEnt:IsTerror() then
+            self.Armed = false
+            self:Disable()
+            return
         end
-	end
+
+        self.HasHit = true
+        self.Armed = false
+        local dmg = DamageInfo()
+        local attacker = self:GetOwner()
+        local inflictor = ents.Create("swep_moneylauncher")
+        if not IsValid(attacker) then attacker = self end
+        dmg:SetAttacker(attacker)
+        dmg:SetInflictor(inflictor)
+        local r = GetConVar("ttt_moneylauncher_randomDamage"):GetFloat()
+        local rand = math.random(-r, r)
+        local dm = GetConVar("ttt_moneylauncher_damage"):GetInt() + rand
+        dmg:SetDamage(dm > 0 and dm or 0)
+        dmg:SetDamageType(DMG_GENERIC)
+        hitEnt:TakeDamageInfo(dmg)
+        local effectdata = EffectData()
+        effectdata:SetStart(data.HitPos)
+        effectdata:SetOrigin(data.HitPos)
+        effectdata:SetScale(1)
+        util.Effect("BloodImpact", effectdata)
+        self:Disable()
+    end
 end
 
 if CLIENT then
